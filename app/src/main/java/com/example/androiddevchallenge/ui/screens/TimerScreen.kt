@@ -137,7 +137,7 @@ fun DrawCircle(modifier: Modifier, color: Color,mills: Long){
         }
         val sweepAngle = per*360
 
-        drawArc(brush = Brush.sweepGradient(listOf(Color.Red,Color.Cyan)),startAngle = 270f,sweepAngle = sweepAngle.toFloat(),useCenter = true )
+        drawArc(brush = Brush.sweepGradient(listOf(Color.Green,Color.Red)),startAngle = 270f,sweepAngle = sweepAngle.toFloat(),useCenter = true )
 
     })
 }
