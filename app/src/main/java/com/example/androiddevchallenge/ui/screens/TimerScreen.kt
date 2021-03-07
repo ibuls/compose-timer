@@ -2,6 +2,7 @@ package com.example.androiddevchallenge.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -18,10 +19,15 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.androiddevchallenge.R
 import androidx.compose.foundation.clickable
+import androidx.compose.material.Colors
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import com.example.androiddevchallenge.ui.screens.TimerState.*
+import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,7 +37,9 @@ val DURATION  = 60 *1000L // duration in SEC
 var timer:Job? = null
 @Preview
 @Composable
-fun TimerScreen() {
+fun TimerScreen(
+
+) {
     var mills =  remember { mutableStateOf(DURATION)}
     var state = remember { mutableStateOf(STOPPED)}
 
@@ -49,6 +57,8 @@ fun TimerScreen() {
 
         override fun onStop() {
             state.value = STOPPED
+            mills.value = DURATION
+
         }
 
         override fun onTick(ms: Long) {
@@ -71,8 +81,8 @@ fun DrawTimerScreen(
     listener: TimerListener
 ) {
 
-    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-        val (tvTime,timerCircle,btnPlay) = createRefs()
+    ConstraintLayout(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colors.background)) {
+        val (tvTime,timerCircle,btnPlay,btnStop) = createRefs()
 
         //val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
 
@@ -87,7 +97,7 @@ fun DrawTimerScreen(
                 bottomMargin = 10.dp,
                 bias = 0.4f
             )
-        },MaterialTheme.colors.primary,mills)
+        },Color.Black,mills)
 
         Text(
             String.format("%02d:%02d",
@@ -96,7 +106,7 @@ fun DrawTimerScreen(
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mills))
             ),
             fontSize = 32.sp,
-            color = MaterialTheme.colors.primary,
+            color =Color.Black,
             modifier = Modifier.constrainAs(tvTime) {
                 top.linkTo(timerCircle.top)
                 bottom.linkTo(timerCircle.bottom)
@@ -104,10 +114,16 @@ fun DrawTimerScreen(
                 end.linkTo(parent.end)
             })
 
-        DrawButtons(Modifier.constrainAs(btnPlay){
+        DrawPlayBtn(Modifier.constrainAs(btnPlay){
             top.linkTo(timerCircle.bottom,margin = 100.dp)
             start.linkTo(parent.start)
             end.linkTo(parent.end)
+        },listener,state,mills)
+
+        DrawStopBtn(Modifier.constrainAs(btnStop){
+            top.linkTo(btnPlay.top)
+            bottom.linkTo(btnPlay.bottom)
+            start.linkTo(btnPlay.end,margin = 15.dp)
         },listener,state,mills)
 
 
@@ -128,7 +144,7 @@ fun DrawCircle(modifier: Modifier, color: Color,mills: Long){
             color = color,
             center = middle,
             radius = size.minDimension/2,
-            style = Stroke(8.dp.toPx()),
+            style = Stroke(2.dp.toPx()),
         )
 
         var per = 0f
@@ -137,12 +153,13 @@ fun DrawCircle(modifier: Modifier, color: Color,mills: Long){
         }
         val sweepAngle = per*360
 
-        drawArc(brush = Brush.sweepGradient(listOf(Color.Green,Color.Red)),startAngle = 270f,sweepAngle = sweepAngle.toFloat(),useCenter = true )
+        drawArc(brush = Brush.sweepGradient(listOf(Color.Green,Color.Red)),startAngle = 270f,sweepAngle = sweepAngle.toFloat(),useCenter = true,style =Stroke())
+        drawArc(brush = Brush.sweepGradient(listOf(Color.Green,Color.Green)),startAngle = 270f,sweepAngle = sweepAngle.toFloat(),useCenter = true)
 
     })
 }
 @Composable
-fun DrawButtons(
+fun DrawPlayBtn(
     modifier: Modifier, listener: TimerListener, state: TimerState, mills: Long
 
 ){
@@ -177,6 +194,33 @@ fun DrawButtons(
 
 
 }
+
+
+@Composable
+fun DrawStopBtn(
+    modifier: Modifier, listener: TimerListener, state: TimerState, mills: Long
+
+){
+    when(state){
+        RUNNING
+        ->{
+            Image(
+                painter = painterResource(id =R.drawable.ic_stop),
+                contentDescription = "",
+                modifier = modifier
+                    .height(30.dp)
+                    .width(30.dp)
+                    .clickable {
+                        listener.onStop()
+                    }
+            )
+        }
+
+    }
+
+
+}
+
 
 @Composable
 fun UpdateTime(mills: Long, listener: TimerListener) {
