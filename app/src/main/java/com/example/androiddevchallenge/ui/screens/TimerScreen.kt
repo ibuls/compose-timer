@@ -23,9 +23,11 @@ import androidx.compose.material.Colors
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.layout.ContentScale
 import com.example.androiddevchallenge.ui.screens.TimerState.*
 import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.*
@@ -81,11 +83,17 @@ fun DrawTimerScreen(
     listener: TimerListener
 ) {
 
-    ConstraintLayout(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colors.background)) {
-        val (tvTime,timerCircle,btnPlay,btnStop) = createRefs()
+    ConstraintLayout(modifier = Modifier
+        .fillMaxSize()
+        .background(color = MaterialTheme.colors.background)) {
+        val (tvTime,timerCircle,btnPlay,btnStop,bgImg) = createRefs()
 
         //val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
 
+        Image(/*colorFilter = ColorFilter.tint(Color.Red),*/painter = painterResource(id = R.drawable.bg_pattern),alpha = 0.1f ,contentScale = ContentScale.Crop, contentDescription = "",
+            modifier = Modifier.fillMaxSize()
+        )
+        
         DrawCircle(modifier = Modifier.constrainAs(timerCircle){
             start.linkTo(parent.start)
             end.linkTo(parent.end)
