@@ -1,5 +1,10 @@
 package com.example.androiddevchallenge.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +27,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import com.example.androiddevchallenge.ui.screens.TimerState.*
 import kotlinx.coroutines.*
@@ -30,6 +37,7 @@ import java.util.concurrent.TimeUnit
 val DURATION = 60 * 1000L // duration in SEC
 var timer: Job? = null
 
+@ExperimentalAnimationApi
 @Preview
 @Composable
 fun TimerScreen(
@@ -69,6 +77,7 @@ fun TimerScreen(
     })
 }
 
+@ExperimentalAnimationApi
 @Composable
 fun DrawTimerScreen(
     mills: Long,
@@ -85,11 +94,21 @@ fun DrawTimerScreen(
 
         //val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
 
-        Image(/*colorFilter = ColorFilter.tint(Color.Red),*/painter = painterResource(id = R.drawable.bg_pattern),
-            alpha = 0.1f,
-            contentScale = ContentScale.Crop,
+        Image(
+            painter = painterResource(id = R.drawable.bg_pattern),
             contentDescription = "",
-            modifier = Modifier.fillMaxSize()
+                contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .constrainAs(bgImg) {
+                    linkTo(
+                        top = parent.top,
+                        bottom = parent.bottom,
+                        bottomMargin = 10.dp,
+                        bias = 0.1f
+                    )
+                }
+                .fillMaxSize()
+                .alpha(0.1f)
         )
 
         DrawCircle(modifier = Modifier.constrainAs(timerCircle) {
@@ -97,8 +116,8 @@ fun DrawTimerScreen(
             end.linkTo(parent.end)
 
             linkTo(
-                top = parent.top,
-                bottom = parent.bottom,
+                top = bgImg.top,
+                bottom = bgImg.bottom,
                 topMargin = 10.dp,
                 bottomMargin = 10.dp,
                 bias = 0.4f
@@ -122,25 +141,32 @@ fun DrawTimerScreen(
             })
 
         DrawPlayBtn(Modifier.constrainAs(btnPlay) {
-            top.linkTo(timerCircle.bottom, margin = 100.dp)
+            top.linkTo(timerCircle.bottom, margin = 200.dp)
             start.linkTo(parent.start)
             end.linkTo(parent.end)
         }, listener, state, mills)
 
-        DrawStopBtn(Modifier.constrainAs(btnStop) {
+        AnimatedVisibility(visible = state == RUNNING,Modifier.constrainAs(btnStop) {
             top.linkTo(btnPlay.top)
             bottom.linkTo(btnPlay.bottom)
             start.linkTo(btnPlay.end, margin = 15.dp)
-        }, listener, state, mills)
-
+        } ) {
+            DrawStopBtn(modifier = Modifier, listener, state, mills)
+        }
 
     }
 }
 
 @Composable
 fun DrawCircle(modifier: Modifier, color: Color, mills: Long) {
-
-
+    var per = 0f
+    if (mills > 0 && DURATION > 0) {
+        per = (DURATION - mills).toFloat() / DURATION.toFloat()
+    }
+    val sweepAngle = animateFloatAsState(
+        targetValue = per * 360,
+        animationSpec = SpringSpec(Spring.DampingRatioNoBouncy, 5f, visibilityThreshold = 1 / 1000f)
+    ).value
     Canvas(modifier = modifier
         .height(200.dp)
         .width(200.dp), onDraw = {
@@ -153,11 +179,8 @@ fun DrawCircle(modifier: Modifier, color: Color, mills: Long) {
             style = Stroke(2.dp.toPx()),
         )
 
-        var per = 0f
-        if (mills > 0 && DURATION > 0) {
-            per = (DURATION - mills).toFloat() / DURATION.toFloat()
-        }
-        val sweepAngle = per * 360
+
+
 
         drawArc(
             brush = Brush.sweepGradient(listOf(Color.Green, Color.Red)),
@@ -214,27 +237,25 @@ fun DrawPlayBtn(
 }
 
 
+@ExperimentalAnimationApi
 @Composable
 fun DrawStopBtn(
     modifier: Modifier, listener: TimerListener, state: TimerState, mills: Long
 
 ) {
-    when (state) {
-        RUNNING
-        -> {
-            Image(
-                painter = painterResource(id = R.drawable.ic_stop),
-                contentDescription = "",
-                modifier = modifier
-                    .height(30.dp)
-                    .width(30.dp)
-                    .clickable {
-                        listener.onStop()
-                    }
-            )
-        }
-
+    when(state){
+      RUNNING ->  Image(
+            painter = painterResource(id = R.drawable.ic_stop),
+            contentDescription = "",
+            modifier = modifier
+                .height(30.dp)
+                .width(30.dp)
+                .clickable {
+                    listener.onStop()
+                }
+        )
     }
+
 
 
 }
