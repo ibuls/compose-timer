@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -24,14 +23,19 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.androiddevchallenge.R
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import com.example.androiddevchallenge.ui.screens.TimerState.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 import java.util.concurrent.TimeUnit
 
 val DURATION = 60 * 1000L // duration in SEC
@@ -44,22 +48,22 @@ fun TimerScreen(
 
 ) {
     var mills = remember { mutableStateOf(DURATION) }
-    var state = remember { mutableStateOf(STOPPED) }
+    var state = remember { mutableStateOf(TimerState.STOPPED) }
 
 
 
     DrawTimerScreen(mills.value, state.value, object : TimerListener {
         override fun onStart() {
-            state.value = RUNNING
+            state.value = TimerState.RUNNING
         }
 
 
         override fun onPause() {
-            state.value = PAUSED
+            state.value = TimerState.PAUSED
         }
 
         override fun onStop() {
-            state.value = STOPPED
+            state.value = TimerState.STOPPED
             mills.value = DURATION
 
         }
@@ -68,7 +72,7 @@ fun TimerScreen(
             if (ms > 0) {
                 mills.value = ms
             } else {
-                state.value = STOPPED
+                state.value = TimerState.STOPPED
                 mills.value = DURATION
 
             }
@@ -146,7 +150,7 @@ fun DrawTimerScreen(
             end.linkTo(parent.end)
         }, listener, state, mills)
 
-        AnimatedVisibility(visible = state == RUNNING,Modifier.constrainAs(btnStop) {
+        AnimatedVisibility(visible = state == TimerState.RUNNING,Modifier.constrainAs(btnStop) {
             top.linkTo(btnPlay.top)
             bottom.linkTo(btnPlay.bottom)
             start.linkTo(btnPlay.end, margin = 15.dp)
@@ -205,7 +209,7 @@ fun DrawPlayBtn(
 
 ) {
     when (state) {
-        PAUSED, STOPPED
+        TimerState.PAUSED, TimerState.STOPPED
         -> {
             Image(
                 painter = painterResource(id = R.drawable.ic_play),
@@ -218,7 +222,7 @@ fun DrawPlayBtn(
                     }
             )
         }
-        RUNNING -> {
+        TimerState.RUNNING -> {
             Image(
                 painter = painterResource(id = R.drawable.ic_pause),
                 contentDescription = "",
@@ -244,7 +248,7 @@ fun DrawStopBtn(
 
 ) {
     when(state){
-      RUNNING ->  Image(
+      TimerState.RUNNING ->  Image(
             painter = painterResource(id = R.drawable.ic_stop),
             contentDescription = "",
             modifier = modifier
